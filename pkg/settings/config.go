@@ -113,7 +113,7 @@ func InitConfig() {
 	Config.Database.MongoDb.DBUri = viper.GetString("DBURI")
 	Config.Database.MongoDb.DBName = viper.GetString("DBNAME")
 	Config.Server.Host = viper.GetString("HOST")
-	Config.Server.Port = viper.GetInt("APP_PORT")
+	Config.Server.Port = viper.GetInt("PORT")
 	Config.EMail.Id = viper.GetString("APP_EMILID")
 	Config.EMail.Username = viper.GetString("APP_USERNAME")
 	Config.EMail.Pwd = viper.GetString("APP_PWD")

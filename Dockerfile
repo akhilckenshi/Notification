@@ -9,5 +9,5 @@ RUN go build -v -o /notificationservice/build/api ./cmd/server
 FROM gcr.io/distroless/static-debian11
 COPY --from=build-stage /notificationservice/build/api /
 COPY --from=build-stage /notificationservice/env/.env /
-EXPOSE 3001
+EXPOSE 8012
 CMD ["/api"]
