@@ -33,13 +33,13 @@ func NewNotificationService(repo *repo.Notification) *NotificationService {
 // Consumer
 func (s *NotificationService) MessageConsumer() {
 	configs := sarama.NewConfig()
-	consumer, err := sarama.NewConsumer([]string{config.Config.Kafka.KafkaPort}, configs)
+	consumer, err := sarama.NewConsumer([]string{config.Config.KafkaPort}, configs)
 	if err != nil {
 		fmt.Println("Error creating Kafka consumer:", err)
 		return
 	}
 	defer consumer.Close()
-	partitionConsumer, err := consumer.ConsumePartition(config.Config.Kafka.KafkaTopic, 0, sarama.OffsetNewest)
+	partitionConsumer, err := consumer.ConsumePartition(config.Config.KafkaTopic, 0, sarama.OffsetNewest)
 	if err != nil {
 		fmt.Println("Error creating partition consumer:", err)
 		return
@@ -71,11 +71,11 @@ func (s *NotificationService) MessageConsumer() {
 			switch msg.Type {
 			case "email":
 				fmt.Println("Processing Email notification")
-				msg.From = config.Config.EMail.Id
+				msg.From = config.Config.Email.Id
 				notifications.SendEmail(msg.To, "Reorder the quantity", msg.Message)
 			case "whatsapp":
 				fmt.Println("Processing WhatsApp notification")
-				msg.From = config.Config.WhatsappConfig.Number
+				msg.From = config.Config.WhatsAppFromNumber
 				notifications.SendWhatsAppMessage(msg.To, msg.Message)
 			default:
 				fmt.Println("Unknown message type:", msg.Type)

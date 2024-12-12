@@ -18,9 +18,9 @@ type TwilioConfig struct {
 
 // SendWhatsAppMessage sends a WhatsApp notification using a third-party API like Twilio.
 func SendWhatsAppMessage(to string, message string) error {
-	accountSid := cfg.Config.WhatsappConfig.Key
-	authToken := cfg.Config.WhatsappConfig.Secret
-	fromNumber := "whatsapp:" + cfg.Config.WhatsappConfig.Number
+	accountSid := cfg.Config.WhatsAppProviderKey
+	authToken := cfg.Config.WhatsAppProviderSecret
+	fromNumber := "whatsapp:" + cfg.Config.WhatsAppFromNumber
 	toNumber := "whatsapp:" + to
 
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{

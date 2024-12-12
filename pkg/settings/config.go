@@ -1,38 +1,58 @@
-/*
-config.go
-Author: Bipin Kumar Ojha
-Description: This file handles the configuration setup for the application.
-It reads configuration from a config.yaml file and stores it in structured types for easier access.
-*/
-
-package cfg
+package config
 
 import (
-	"log"
+	"fmt"
 	"os"
-	"smartsme-notificationservice/pkg/utils"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
 
 var Config Configuration
 
-// Configuration struct holds all the configurations from the config.yaml file
 type Configuration struct {
-	Server         ServerConfig   `mapstructure:"server"`   // Server configuration
-	Logger         LoggerConfig   `mapstructure:"logger"`   // Logger configuration
-	Database       DatabaseConfig `mapstructure:"database"` // Database configuration
-	Kafka          KafkaConfig    `mapstructure:"kafka"`    // Kafka configuration
-	EMail          Email          `mapstructure:"email"`    // Email configuration
-	WhatsappConfig WhatsAppConfig `mapstructure:"whatsppp"` // Whatsapp config
+	Environment            string `mapstructure:"environment"`
+	Logger                 LoggerConfig
+	Database               DatabaseConfig
+	WhatsApp               WhatsAppConfig
+	App                    AppConfig
+	Email                  EmailConfig
+	DBURI                  string `mapstructure:"DBURI"`
+	DBName                 string `mapstructure:"DBNAME"`
+	DBConnCount            int    `mapstructure:"DBCONNCNT"`
+	DBHost                 string `mapstructure:"DB_HOST"`
+	AppPort                string `mapstructure:"PORT"`
+	KafkaPort              string `mapstructure:"KAFKA_PORT"`
+	KafkaTopic             string `mapstructure:"KAFKA_TOPIC"`
+	AppEmailID             string `mapstructure:"APP_EMILID"`
+	AppEmailPassword       string `mapstructure:"APP_EMAIL_PWD"`
+	SMTPHost               string `mapstructure:"SMTP_HOST"`
+	SMTPPort               int    `mapstructure:"SMTP_PORT"`
+	WhatsProviderURL       string `mapstructure:"WHATS_PROVIDER_URL"`
+	WhatsAppProviderKey    string `mapstructure:"WHATSAPP_PROVIDER_KEY"`
+	WhatsAppProviderSecret string `mapstructure:"WHATSAPP_PROVIDER_SECRET"`
+	WhatsAppFromNumber     string `mapstructure:"WHATSAPP_FROM_NUMBER"`
 }
 
-type Email struct {
-	Id       string `mapstructure:"id"`       // EMail ID
-	Username string `mapstructure:"username"` //Username
-	Pwd      string `mapstructure:"password"` // Password
-	SmtpHost string `mapstructure:"smtpHost"` // smtp host
-	SmtpPort int    `mapstructure:"smtpPort"` // smtp port
+type LoggerConfig struct {
+	FileName     string `mapstructure:"fileName"`
+	FileSize     int    `mapstructure:"fileSize"`
+	MaxLogFile   int    `mapstructure:"maxLogFile"`
+	MaxRetention int    `mapstructure:"maxRetention"`
+	CompressLog  bool   `mapstructure:"compressLog"`
+	Level        string `mapstructure:"level"`
+}
+
+type DatabaseConfig struct {
+	DBTimeout int         `mapstructure:"dbTimeout"`
+	DBType    string      `mapstructure:"dbType"`
+	MongoDb   MongoConfig `mapstructure:"mongo"`
+}
+
+type MongoConfig struct {
+	DBUri    string `mapstructure:"dbUri"`
+	DBName   string `mapstructure:"dbName"`
+	MaxLimit int    `mapstructure:"maxLimit"`
 }
 
 type WhatsAppConfig struct {
@@ -43,86 +63,72 @@ type WhatsAppConfig struct {
 	Number       string `mapstructure:"number"`
 }
 
-// ServerConfig holds server-specific configurations
-type ServerConfig struct {
-	Host string `mapstructure:"host"` // Server host
-	Port int    `mapstructure:"port"` // Server port
+type AppConfig struct {
+	WithSSL bool `mapstructure:"withssl"`
 }
 
-// LoggerConfig holds logger-specific configurations
-type LoggerConfig struct {
-	FileName     string `mapstructure:"fileName"`     // Log file name
-	FileSize     int    `mapstructure:"fileSize"`     // Log file size in MB
-	MaxLogFile   int    `mapstructure:"maxLogFile"`   // Maximum number of log files
-	MaxRetention int    `mapstructure:"maxRetention"` // Maximum retention period for logs in days
-	CompressLog  bool   `mapstructure:"compressLog"`  // Whether to compress log files
-	Level        string `mapstructure:"level"`
+type EmailConfig struct {
+	Id       string `mapstructure:"id"`
+	Username string `mapstructure:"username"`
+	Pwd      string `mapstructure:"password"`
+	SmtpHost string `mapstructure:"smtpHost"`
+	SmtpPort int    `mapstructure:"smtpPort"`
 }
 
-// DatabaseConfig holds database-specific configurations
-type DatabaseConfig struct {
-	DBTimeout int         `mapstructure:"dbTimeout"` // Database request timeout
-	DBType    string      `mapstructure:"dbType"`    // Database Type
-	MongoDb   MongoConfig `mapstructure:"mongo"`     // Mongo specific configuration
-}
+func InitConfig() (Configuration, error) {
+	env := os.Getenv("APP_ENV")
+	var configDir, envDir string
 
-// MongoConfig holds Mongo-specific configurations
-type MongoConfig struct {
-	DBUri    string `mapstructure:"dbUri"`    // Database URI
-	DBName   string `mapstructure:"dbName"`   // Database Name
-	MaxLimit int    `mapstructure:"maxLimit"` // No of concurrent connection
-}
-
-// KafkaConfig holds Kafka-specific configurations
-type KafkaConfig struct {
-	KafkaPort  string `mapstructure:"KAFKA_PORT"`  // Kafka Port
-	KafkaTopic string `mapstructure:"KAFKA_TOPIC"` // Kafka Topic
-}
-
-// InitConfig initializes the application configuration by reading the config.yaml file
-func InitConfig() {
-	// Get the current working directory
-	currentWorkDirectory, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err.Error()) // Exit if there's an error getting the working directory
+	if env == "production" {
+		configDir = "/etc/config"
+		envDir = "/etc/env"
+	} else {
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return Config, err
+		}
+		configDir = filepath.Join(currentDir, "../../config")
+		if _, err := os.Stat(configDir); os.IsNotExist(err) {
+			configDir = "./"
+		}
+		envDir = filepath.Join(currentDir, "../../env")
+		if _, err := os.Stat(envDir); os.IsNotExist(err) {
+			envDir = "./"
+		}
 	}
 
-	// Add configuration paths
-	viper.AddConfigPath(currentWorkDirectory + "/../../config") // Relative path for local development
-	viper.AddConfigPath("/etc/viper/config")                    // Path for production environment
-	viper.AddConfigPath(".")                                    // Current directory
-
-	// Set the configuration file name and type
-	viper.SetConfigName("config") // Configuration file name (without extension)
-	viper.SetConfigType("yaml")   // Configuration file type
-
-	// Read the configuration file
+	// Load `config.yaml`
+	viper.AddConfigPath(configDir)
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("Could not read config file, using default values!") // Log a warning if the config file isn't found
+		return Config, err
 	}
 
-	// Unmarshal the configuration into the Config struct
+	// Load `.env`
+	viper.AddConfigPath(envDir)
+	viper.SetConfigName(".env")
+	viper.SetConfigType("env")
+	if err := viper.MergeInConfig(); err != nil {
+		return Config, err
+	}
+
+	// Bind sensitive environment variables
+	envVars := []string{
+		"DBURI", "DBNAME", "PORT", "KAFKA_PORT", "KAFKA_TOPIC",
+		"APP_EMILID", "APP_USERNAME", "APP_PWD", "SMTP_HOST", "SMTP_PORT",
+		"WHATS_PROVIDER_URL", "WHATSAPP_PROVIDER_KEY", "WHATSAPP_PROVIDER_SECRET", "WHATSAPP_FROM_NUMBER",
+	}
+	for _, envVar := range envVars {
+		if err := viper.BindEnv(envVar); err != nil {
+			return Config, err
+		}
+	}
+
+	// Unmarshal the configuration
 	if err := viper.Unmarshal(&Config); err != nil {
-		log.Fatalf("Could not unmarshal config: %v", err) // Exit if there's an error unmarshalling the config
+		return Config, err
 	}
-
-	utils.LoadEnv(currentWorkDirectory)
-
-	viper.AutomaticEnv()
-
-	Config.Database.MongoDb.DBUri = viper.GetString("DBURI")
-	Config.Database.MongoDb.DBName = viper.GetString("DBNAME")
-	Config.Server.Host = viper.GetString("HOST")
-	Config.Server.Port = viper.GetInt("PORT")
-	Config.EMail.Id = viper.GetString("APP_EMILID")
-	Config.EMail.Username = viper.GetString("APP_USERNAME")
-	Config.EMail.Pwd = viper.GetString("APP_PWD")
-	Config.EMail.SmtpHost = viper.GetString("SMTP_HOST")
-	Config.EMail.SmtpPort = viper.GetInt("SMTP_PORT")
-	Config.WhatsappConfig.Key = viper.GetString("WHATSAPP_PROVIDER_KEY")
-	Config.WhatsappConfig.Secret = viper.GetString("WHATSAPP_PROVIDER_SECRET")
-	Config.WhatsappConfig.Number = viper.GetString("WHATSAPP_FROM_NUMBER")
-	Config.Kafka.KafkaPort = viper.GetString("KAFKA_PORT")
-	Config.Kafka.KafkaTopic = viper.GetString("KAFKA_TOPIC")
-
+	fmt.Println("config-----------", Config)
+	return Config, nil
 }

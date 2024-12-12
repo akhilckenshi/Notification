@@ -19,14 +19,17 @@ import (
 
 func main() {
 	// Initialize application configuration from environment variables and settings files
-	initializeConfig()
+	config, err := initializeConfig()
+	if err != nil {
+		fmt.Println("Not able to get config files")
+	}
 
 	// Initialize the logger with settings from the configuration
-	initializeLogger()
+	initializeLogger(config)
 	logger.Log.Info("Logger Initialized")
 
 	// Initialize the database
-	if err := database.InitDatabase(cfg.Config.Database); err != nil {
+	if err := database.InitDatabase(config); err != nil {
 		logger.Log.Fatal(fmt.Sprintf("Failed to initialize database: %v", err))
 	}
 	defer func() {
@@ -44,9 +47,18 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		// Start the HTTP server on the configured port, log and handle any errors
-		if err := router.Listen(fmt.Sprintf(":%d", cfg.Config.Server.Port)); err != nil {
-			logger.Log.Fatal(fmt.Sprintf("Failed to start server: %v", err))
+		if config.App.WithSSL {
+			certFile := "/etc/ssl/certs/cert.pem"
+			keyFile := "/etc/ssl/private/key.pem"
+			// Start the HTTPS server on the configured port, log and handle any errors
+			if err := router.ListenTLS(fmt.Sprintf(":%s", config.AppPort), certFile, keyFile); err != nil {
+				logger.Log.Fatal(fmt.Sprintf("Failed to start server: %v", err))
+			}
+		} else {
+			// Start the HTTP server on the configured port, log and handle any errors
+			if err := router.Listen(fmt.Sprintf(":%s", config.AppPort)); err != nil {
+				logger.Log.Fatal(fmt.Sprintf("Failed to start server: %v", err))
+			}
 		}
 	}()
 
@@ -61,23 +73,21 @@ func main() {
 initializeConfig loads the application configuration from environment variables
 and other settings files using the InitConfig function from the settings package.
 */
-func initializeConfig() {
-	cfg.InitConfig()
+func initializeConfig() (cfg.Configuration, error) {
+	return cfg.InitConfig()
 }
 
 /*
 initializeLogger sets up the logging system using the settings specified
 in the configuration file (e.g., log file name, size, retention, and level).
 */
-func initializeLogger() {
+func initializeLogger(conf cfg.Configuration) {
 	logger.InitLogger(
-		cfg.Config.Logger.FileName,
-		cfg.Config.Logger.FileSize,
-		cfg.Config.Logger.MaxLogFile,
-		cfg.Config.Logger.MaxRetention,
-		cfg.Config.Logger.CompressLog,
-		cfg.Config.Logger.Level,
+		conf.Logger.FileName,
+		conf.Logger.FileSize,
+		conf.Logger.MaxLogFile,
+		conf.Logger.MaxRetention,
+		conf.Logger.CompressLog,
+		conf.Logger.Level,
 	)
 }
-
-

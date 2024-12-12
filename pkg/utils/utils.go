@@ -1,6 +1,6 @@
 /*
 utils.go
-Author: Bipin Kumar Ojha
+Author: Akhil C
 Description: This utility package provides common functions used across the application,
 such as environment loading, random number generation, authentication utilities,
 and JWT token generation.

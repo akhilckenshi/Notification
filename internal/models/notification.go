@@ -22,8 +22,8 @@ type Notification struct {
 	Priority       string             `json:"priority" bson:"priority"`               // Priority level of the notification
 	Message        string             `json:"message" bson:"message"`                 // Content of the notification message
 	Status         string             `json:"status" bson:"status"`                   // Current status of the notification (e.g., sent, pending)
-	CreatedAt      time.Time          `json:"createdAt" bson:"createdAt"`             // Timestamp of when the notification was created
-	UpdatedAt      time.Time          `json:"updatedAt" bson:"updatedAt"`             // Timestamp of when the notification was last updated
+	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`           // Timestamp of when the notification was created
+	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`           // Timestamp of when the notification was last updated
 }
 
 func (N Notification) TableName() string {

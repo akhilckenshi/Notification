@@ -27,18 +27,19 @@ var dbHandler Database
 
 // InitDatabase initializes the appropriate database connection based on the configuration
 // It checks the database type from the config file and sets the dbHandler accordingly
-func InitDatabase(dbConfig cfg.DatabaseConfig) error {
+func InitDatabase(conf cfg.Configuration) error {
+	fmt.Printf("CONFIG: %+v\n", conf)
 	// Switch case to determine the type of database being used, such as MongoDB or PostgreSQL
-	switch cfg.Config.Database.DBType {
+	switch conf.Database.DBType {
 	case "mongo":
 		dbHandler = &MongoDB{
-			DBUri:    cfg.Config.Database.MongoDb.DBUri,    // MongoDB URI
-			DBName:   cfg.Config.Database.MongoDb.DBName,   // MongoDB Database Name
-			MaxLimit: cfg.Config.Database.MongoDb.MaxLimit, // Maximum number of connections
+			DBUri:    conf.DBURI,       // MongoDB URI
+			DBName:   conf.DBName,      // MongoDB Database Name
+			MaxLimit: conf.DBConnCount, // Maximum number of connections
 		}
 	default:
 		// If the database type is unsupported, return an error
-		return fmt.Errorf("unsupported database type: %s", cfg.Config.Database.DBType)
+		return fmt.Errorf("unsupported database type: %s", conf.Database.DBType)
 	}
 
 	// Initialize the database connection and return any error encountered during initialization
