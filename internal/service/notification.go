@@ -72,11 +72,11 @@ func (s *NotificationService) MessageConsumer() {
 			case "email":
 				fmt.Println("Processing Email notification")
 				msg.From = config.Config.Email.Id
-				notifications.SendEmail(msg.To, "Reorder the quantity", msg.Message)
+				notifications.SendEmail(msg.To, msg.Subject, msg.Message)
 			case "whatsapp":
 				fmt.Println("Processing WhatsApp notification")
 				msg.From = config.Config.WhatsAppFromNumber
-				notifications.SendWhatsAppMessage(msg.To, msg.Message)
+				notifications.SendWhatsAppMessage(msg.To, msg.Subject, msg.Message)
 			default:
 				fmt.Println("Unknown message type:", msg.Type)
 			}
@@ -109,6 +109,7 @@ func (n *NotificationService) UnmarshelChatMessage(data []byte) (*models.Notific
 		From:           notifier.From,
 		Type:           notifier.Type,
 		Priority:       notifier.Priority,
+		Subject:        notifier.Subject,
 		Message:        notifier.Message,
 		Status:         "Delivered",
 		CreatedAt:      notifier.CreatedAt,

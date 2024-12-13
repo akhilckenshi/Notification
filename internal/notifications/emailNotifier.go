@@ -18,7 +18,8 @@ func SendEmail(to string, subject string, body string) error {
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
 	// Create the email message.
-	msg := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s", from, to, subject, body)
+	// Notice the "Content-Type" header for HTML.
+	msg := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\nContent-Type: text/html; charset=UTF-8\n\n%s", from, to, subject, body)
 
 	// Send the email.
 	return smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, []byte(msg))

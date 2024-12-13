@@ -20,6 +20,7 @@ type Notification struct {
 	From           string             `json:"from" bson:"from"`                       // Sender of the notification
 	Type           string             `json:"type" bson:"type"`                       // Type of the notification message
 	Priority       string             `json:"priority" bson:"priority"`               // Priority level of the notification
+	Subject        string             `json:"subject" bson:"subject"`                 // Subject of the notification message
 	Message        string             `json:"message" bson:"message"`                 // Content of the notification message
 	Status         string             `json:"status" bson:"status"`                   // Current status of the notification (e.g., sent, pending)
 	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`           // Timestamp of when the notification was created
@@ -37,6 +38,7 @@ type Notifier struct {
 	From           string             `json:"from" bson:"from"`                       // Sender of the notification
 	Type           string             `json:"type" bson:"type"`                       // Type of the notification message
 	Priority       string             `json:"priority" bson:"priority"`               // Priority level of the notification
+	Subject        string             `json:"subject" bson:"subject"`                 // Subject of the notification message
 	Message        string             `json:"message" bson:"message"`                 // Content of the notification message
 	CreatedAt      time.Time          `json:"createdAt" bson:"createdAt"`             // Timestamp of when the Business Type was created
 }
