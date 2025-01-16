@@ -1,0 +1,21 @@
+# Log files
+*.log
+
+# Applications
+*.exe
+
+# remove VSCode project settings
+.VSCode
+
+# remove Local Config info
+Config
+
+# remove binary
+Cli 
+
+# remove env files
+env
+
+# remove go.mod and go.sum files
+go.mod
+go.sum
